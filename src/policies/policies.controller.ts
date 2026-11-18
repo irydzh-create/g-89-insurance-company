@@ -11,27 +11,51 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { ApiBody, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+
 import { Policy } from './policy.entity';
 import { PoliciesService } from './policies.service';
+import { PoliciesMapper } from './dto/policy.mapper';
+import { PolicyDto } from './dto/policy.dto';
+import { PolicySaveDto } from './dto/policy.save';
 
 @Controller('policies')
 export class PoliciesController {
-  constructor(private readonly service: PoliciesService) {}
+  constructor(
+    private readonly service: PoliciesService,
+    private readonly mapper: PoliciesMapper,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() policy: Policy): Promise<Policy> {
-    return await this.service.create(policy);
+  @ApiBody({ type: PolicySaveDto })
+  @ApiCreatedResponse({ type: PolicyDto })
+  async create(@Body() saveDto: PolicySaveDto): Promise<PolicyDto> {
+    const policy = this.mapper.mapDtoToEntity(saveDto);
+
+    const savedPolicy = await this.service.create(
+      policy,
+      saveDto.holderId,
+      saveDto.agentId,
+    );
+
+    return this.mapper.mapEntityToDto(savedPolicy);
   }
 
   @Get()
-  async getAll(): Promise<Policy[]> {
-    return await this.service.getAllActivePolicies();
+  @ApiOkResponse({ type: PolicyDto, isArray: true })
+  async getAll(): Promise<PolicyDto[]> {
+    const policies = await this.service.getAllActivePolicies();
+
+    return policies.map((policy: Policy) => this.mapper.mapEntityToDto(policy));
   }
 
   @Get(':id')
-  async getById(@Param('id', ParseIntPipe) id: number): Promise<Policy | null> {
-    return await this.service.getActivePolicyById(id);
+  @ApiOkResponse({ type: PolicyDto })
+  async getById(@Param('id', ParseIntPipe) id: number): Promise<PolicyDto> {
+    const policy = await this.service.getActivePolicyById(id);
+
+    return this.mapper.mapEntityToDto(policy);
   }
 
   @Delete(':id')

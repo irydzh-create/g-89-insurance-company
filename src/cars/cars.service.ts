@@ -10,8 +10,10 @@ export class CarsService {
     private readonly userService: UsersService,
   ) {}
 
-  async create(car: Car): Promise<Car> {
+  async create(car: Car, ownerId: number): Promise<Car> {
     car.active = true;
+    car.owner = await this.userService.getActiveUserById(ownerId);
+
     return await this.repository.save(car);
   }
 

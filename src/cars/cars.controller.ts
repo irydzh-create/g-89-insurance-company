@@ -12,15 +12,23 @@ import {
 } from '@nestjs/common';
 import { Car } from './car.entity';
 import { CarsService } from './cars.service';
-
+import { CarSaveDto } from './dto/car.save';
+import { CarDto } from './dto/car.dto';
+import { CarsMapper } from './dto/car.mapper';
 @Controller('cars')
 export class CarsController {
-  constructor(private readonly service: CarsService) {}
-
+  constructor(
+    private readonly service: CarsService,
+    private readonly mapper: CarsMapper,
+  ) {}
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() car: Car): Promise<Car> {
-    return await this.service.create(car);
+  async create(@Body() saveDto: CarSaveDto): Promise<CarDto> {
+    const car: Car = this.mapper.mapDtoToEntity(saveDto);
+
+    const savedCar: Car = await this.service.create(car, saveDto.ownerId);
+
+    return this.mapper.mapEntityToDto(savedCar);
   }
 
   @Get()

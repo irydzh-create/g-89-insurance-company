@@ -15,4 +15,7 @@ export class CarSaveDto {
 
   @ApiProperty()
   color: string;
+
+  @ApiProperty({ example: 1, description: 'ID of the car owner' })
+  ownerId: number;
 }

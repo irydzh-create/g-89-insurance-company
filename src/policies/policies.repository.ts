@@ -11,25 +11,33 @@ export class PoliciesRepository {
   ) {}
 
   async save(policy: Policy): Promise<Policy> {
-    return this.repository.save(policy);
+    return await this.repository.save(policy);
   }
 
   async findAllActive(): Promise<Policy[]> {
-    return this.repository.find({
+    return await this.repository.find({
       where: {
         active: true,
       },
       relations: {
-        cars: true,
+        holder: true,
+        agent: true,
+        cars: {
+          owner: true,
+        },
       },
     });
   }
 
   async findById(id: number): Promise<Policy | null> {
-    return this.repository.findOne({
+    return await this.repository.findOne({
       where: { id },
       relations: {
-        cars: true,
+        holder: true,
+        agent: true,
+        cars: {
+          owner: true,
+        },
       },
     });
   }
